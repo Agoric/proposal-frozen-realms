@@ -7,7 +7,8 @@
         "build": "ecmarkup spec/index.emu index.html",
         "watch": "ecmarkup --watch spec/index.emu index.html",
         "shim:lint": "eslint ./shim/src/**/*.js ./shim/test/**/*.js",
-        "shim:prettier": "prettier --config ./shim/.prettierrc --write ./shim/src/**/*.js ./shim/test/**/*.js"
+        "shim:prettier": "prettier --config ./shim/.prettierrc --write ./shim/src/**/*.js ./shim/test/**/*.js",
+        "shim:test": "tape -r esm ./shim/test/**/*.js"
     },
     "repository": {
         "type": "git",
@@ -40,6 +41,8 @@
         "eslint-config-prettier": "^2.9.0",
         "eslint-plugin-import": "^2.12.0",
         "eslint-plugin-prettier": "^2.6.0",
-        "prettier": "^1.12.1"
+        "esm": "^3.0.37",
+        "prettier": "^1.12.1",
+        "tape": "^4.9.0"
     }
 }

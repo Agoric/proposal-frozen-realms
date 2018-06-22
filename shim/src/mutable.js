@@ -9,7 +9,8 @@ import {
   getOwnPropertyDescriptors,
   getOwnPropertyNames,
   getOwnPropertySymbols,
-  objectHasOwnProperty
+  objectHasOwnProperty,
+  ownKeys
 } from './commons';
 
 /**
@@ -19,24 +20,55 @@ import {
  *
  * Because of lack of sufficient foresight at the time, ES5 unfortunately
  * specified that a simple assignment to a non-existent property must fail if
- * it would override a non-writable data property of the same name. (In
- * retrospect, this was a mistake, but it is now too late and we must live
- * with the consequences.) As a result, simply freezing an object to make it
- * tamper proof has the unfortunate side effect of breaking previously correct
- * code that is considered to have followed JS best practices, if this
- * previous code used assignment to override.
+ * it would override a non-writable data property of the same name (e.g. the
+ * target object doesn't have an own-property by that name, but it inherits
+ * from an object which does, and the inherited property is non-writable).
+ * (In retrospect, this was a mistake, but it is now too late and we must
+ * live with the consequences.) As a result, simply freezing an object to
+ * make it tamper proof has the unfortunate side effect of breaking
+ * previously correct code that is considered to have followed JS best
+ * practices, if this previous code used assignment to override.
+ *
+ * For example, the following code violates no JavaScript best practice but
+ * nevertheless fails without the repair:
+ *
+ * Object.freeze(Object.prototype);
+ *
+ * function Point(x, y) {
+ *   this.x = x;
+ *   this.y = y;
+ * }
+ *
+ * Point.prototype.toString = function() { return `<${this.x},${this.y}>`; };
+ *
+ * The problem is that the override will cause the assignment to
+ * Point.prototype.toString to fail because Point.prototype inherits from
+ * Object.prototype, and Object.freeze made Object.prototype.toString into a
+ * non-writable data property.
+ *
+ * Another common pattern is:
+ *
+ *  Object.freeze(Error.prototype);
+ *  e = new Error();
+ *  e.message = 'something';
  *
  * To work around this mistake, deepFreeze(), prior to freezing, replaces
  * selected configurable own data properties with accessor properties which
  * simulate what we should have specified -- that assignments to derived
  * objects succeed if otherwise possible.
  */
-function beMutable(obj, prop, desc) {
+function beMutable(obj, prop, desc) { // todo: rename to doRepair
+  // prepare for 'parent' (aka 'obj') to be frozen, and allow 'child' to
+  // inherit from 'parent' and accept property assignment (like
+  // 'child.foo=4')
   if ('value' in desc && desc.configurable) {
     const value = desc.value;
 
     // eslint-disable-next-line no-inner-declarations
     function getter() {
+      // we're now committed to being non-writable: until we freeze this
+      // object, its behavior will be visibly different than if the override
+      // mistake had not been made
       return value;
     }
 
@@ -47,16 +79,21 @@ function beMutable(obj, prop, desc) {
     // eslint-disable-next-line no-inner-declarations
     function setter(newValue) {
       if (obj === this) {
+        // prevent 'parent.foo='
         throw new TypeError(`Cannot assign to read only property '${prop}' of object '${obj}'`);
       }
-      if (objectHasOwnProperty.call(this, prop)) {
+      if (objectHasOwnProperty.call(this, prop)) { // todo: uncurry
+        // we can only get here if someone extracts this setter and applies
+        // it to an object which has already been assigned to (so normal
+        // assignment would have changed the data property instead of using
+        // this getter)
         this[prop] = newValue;
       } else {
         defineProperty(this, prop, {
           value: newValue,
-          writable: true,
-          enumerable: desc.enumerable,
-          configurable: desc.configurable
+          writable: true, // emulate creating a property by assignment
+          enumerable: true,
+          configurable: true,
         });
       }
     }
@@ -65,12 +102,12 @@ function beMutable(obj, prop, desc) {
       get: getter,
       set: setter,
       enumerable: desc.enumerable,
-      configurable: desc.configurable
+      configurable: false // we're freezing
     });
   }
 }
 
-export function beMutableProperties(obj) {
+export function beMutableProperties(obj) { // repairObjectForFreeze
   if (!obj) {
     return;
   }
@@ -78,11 +115,18 @@ export function beMutableProperties(obj) {
   if (!descs) {
     return;
   }
-  getOwnPropertyNames(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
-  getOwnPropertySymbols(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
+  // todo: forEach may be corrupted, use for of, make sure it gets Symbols
+  // todo: for of can be corrupted by changing IteratorSymbol something
+  // todo: uncurry forEach, use that
+  // forEach(ownKeys(descs), prop => beMutable(obj, prop, descs[prop]))
+  for (let prop of ownKeys(descs)) {
+    beMutable(obj, prop, descs[prop]);
+  }
+  //getOwnPropertyNames(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
+  //getOwnPropertySymbols(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
 }
 
-export function beMutableProperty(obj, prop) {
+export function beMutableProperty(obj, prop) { // repairForFreeze
   const desc = getOwnPropertyDescriptor(obj, prop);
   beMutable(obj, prop, desc);
 }

@@ -2,6 +2,8 @@
 // improves both consitency and minification. Unused declarations are dropped
 // by the tree shaking process.
 
+// todo: delete and copy from realms/commons.js
+
 export const {
   assign,
   create,
