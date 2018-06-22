@@ -73,3 +73,16 @@ test('scan', t => {
 
   t.end();
 });
+
+/*
+import Realm from '../../../proposal-realms/shim/src/realm';
+test('runtime', t => {
+  const start = Date.now();
+  const r = new Realm();
+  deepFreeze(r.global);
+  const finish = Date.now();
+  console.log(`elapsed: ${finish - start} ms`);
+
+  t.end();
+});
+*/
