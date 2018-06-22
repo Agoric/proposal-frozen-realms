@@ -5,10 +5,11 @@
 // Mitigate proxy-related security issues
 // https://github.com/tc39/ecma262/issues/272
 
-import { freeze, getOwnPropertyDescriptors, getPrototypeOf, ownKeys } from './commons';
+import { freeze, getOwnPropertyDescriptors, getPrototypeOf, ownKeys, objectHasOwnProperty, forEach } from './commons';
 
 // Objects that are deeply frozen.
 const frozenSet = new WeakSet();
+const weakSetAdd = WeakSet.prototype.add;
 
 /**
  * "deepFreeze()" acts like "Object.freeze()", except that:
@@ -17,7 +18,7 @@ const frozenSet = new WeakSet();
  * reachable from it via transitive reflective property and prototype
  * traversal.
  */
-export function deepFreeze(node) {
+export default function deepFreeze(node) {
   // Objects that we have frozen in this round.
   const freezingSet = new Set();
 
@@ -33,11 +34,11 @@ export function deepFreeze(node) {
       // future proof: break until someone figures out what it should do
       throw new TypeError(`Unexpected typeof: ${type}`);
     }
-    if (frozenSet.has(val) || freezingSet.has(val)) {
+    if (frozenSet.has(val) || freezingSet.has(val)) { // todo use uncurried form
       // Ignore if already frozen or freezing
       return;
     }
-    freezingSet.add(val);
+    freezingSet.add(val); // todo use uncurried form
   }
 
   function doFreeze(obj) {
@@ -50,11 +51,23 @@ export function deepFreeze(node) {
     // Throws if this fails (strict mode).
     freeze(obj);
 
-    enqueue(getPrototypeOf(obj));
+    // we rely upon certain commitments of Object.freeze and proxies here
+
+    // get stable/immutable outbound links before a Proxy has a chance to do
+    // something sneaky. 
+    const proto = getPrototypeOf(obj);
     const descs = getOwnPropertyDescriptors(obj);
-    ownKeys(descs).forEach(name => {
+    enqueue(proto);
+    forEach(ownKeys(descs), name => {
+      // todo: getOwnPropertyDescriptors is guaranteed to return well-formed
+      // descriptors, but they still inherit from Object.prototype. If
+      // someone has poisoned Object.prototype to add 'value' or 'get'
+      // properties, then a simple 'if ("value" in desc)' or 'desc.value'
+      // test could be confused. We use hasOwnProperty to be sure about
+      // whether 'value' is present or not, which tells us for sure that this
+      // is a data property.
       const desc = descs[name];
-      if ('value' in desc) {
+      if (objectHasOwnProperty(desc, 'value')) { // todo uncurried form
         enqueue(desc.value);
       } else {
         enqueue(desc.get);
@@ -65,11 +78,15 @@ export function deepFreeze(node) {
 
   function dequeue() {
     // New values added before forEach() has finished will be visited.
-    freezingSet.forEach(doFreeze);
+    forEach(freezingSet, doFreeze); // todo curried forEach
   }
 
   function commit() {
-    freezingSet.forEach(frozenSet.add, frozenSet);
+    // todo curried forEach
+    // we capture the real WeakSet.prototype.add above, in case someone
+    // changes it. The two-argument form of forEach passes the second
+    // argument as the 'this' binding, so we add to the correct set.
+    forEach(freezingSet, weakSetAdd, frozenSet);
   }
 
   enqueue(node);
