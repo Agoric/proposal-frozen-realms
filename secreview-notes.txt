@@ -1,0 +1,23 @@
+call this a preemptive shim for a fix that ought to go in
+
+rename 'mutable.js' to 'repairOverride.js'
+
+the repair code is specific to preparing for a deep freeze, so it should not
+be a generic module
+
+run test over a corpus of source code that runs under Locker to see what data
+properties need to be repaired (because that code wants to modify
+pre-existing inherited properties from frozen objects). tension between
+performance hit of using the fixed object and surprising immutability
+failures from non-fixed objects.
+
+
+r = new Realm()
+r.shim(shim1, shim2);
+r.deepFreeze();
+ref = r.evaluate(program);
+ref.foo(args);
+
+
+write a Proxy which explodes on everything, make sure that enqueue() doesn't explode
+for each operation, here's the list of traps I'm expecting to fire, test that
