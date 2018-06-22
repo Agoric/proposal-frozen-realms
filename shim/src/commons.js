@@ -12,17 +12,17 @@ export const {
   getOwnPropertyDescriptors,
   getOwnPropertyNames,
   getOwnPropertySymbols,
+  defineProperty,
+  deleteProperty,
+  getOwnPropertyDescriptor,
+  getPrototypeOf,
+  setPrototypeOf,
   hasOwnProperty
 } = Object;
 
 export const {
   apply,
-  defineProperty,
-  deleteProperty,
-  getOwnPropertyDescriptor,
-  getPrototypeOf,
   ownKeys,
-  setPrototypeOf
 } = Reflect;
 
 export const objectHasOwnProperty = Object.prototype.hasOwnProperty;

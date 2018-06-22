@@ -21,3 +21,7 @@ ref.foo(args);
 
 write a Proxy which explodes on everything, make sure that enqueue() doesn't explode
 for each operation, here's the list of traps I'm expecting to fire, test that
+
+use strict mode everywhere
+all tests should use strict mode
+actually we're pulling everything from modules, should already be in strict mode

@@ -44,12 +44,16 @@ test('deep-freeze', t => {
   deepFreeze(child);
 
   const gopd = Object.getOwnPropertyDescriptor;
-  //t.equal(gopd(parent, 'foo').writable, false);
-  t.throws(() => { parent.foo = 6; }, TypeError);
-  //t.throws(() => { child.foo = 6; }, TypeError);
-  //t.throws(() => { parent.bar.baz = 7; }, TypeError);
-  //t.throws(() => { child.bar.baz = 7; }, TypeError);
-  //t.throws(() => { child.newprop = 8; }, TypeError);
+  // the repair is visible: without the repair, after freeze .writable would
+  // be true. With the repair, it's now an accessor
+  t.equal(gopd(parent, 'foo').writable, undefined);
+  t.throws(() => { parent.foo = 6; }, TypeError, 'parent.foo=6 should fail');
+  t.throws(() => { child.foo = 6; }, TypeError, 'child.foo=6 should fail');
+  t.equal(child.foo, 4, 'child.foo is still 4');
+  t.equal(parent.foo, 4, 'parent.foo is still 4');
+  t.throws(() => { parent.bar.baz = 7; }, TypeError);
+  t.throws(() => { child.bar.baz = 7; }, TypeError);
+  t.throws(() => { child.newprop = 8; }, TypeError);
   t.throws(() => { delete parent.foo; }, TypeError);
 
   t.end();
