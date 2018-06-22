@@ -20,10 +20,7 @@ export const {
   hasOwnProperty
 } = Object;
 
-export const {
-  apply,
-  ownKeys,
-} = Reflect;
+export const { apply, ownKeys } = Reflect;
 
 export const objectHasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -34,4 +31,3 @@ const uncurryThis = bind.bind(bind.call);
 
 //export const objectHasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
 export const forEach = uncurryThis(Array.prototype.forEach);
-

@@ -57,7 +57,8 @@ import {
  * simulate what we should have specified -- that assignments to derived
  * objects succeed if otherwise possible.
  */
-function beMutable(obj, prop, desc) { // todo: rename to doRepair
+function beMutable(obj, prop, desc) {
+  // todo: rename to doRepair
   // prepare for 'parent' (aka 'obj') to be frozen, and allow 'child' to
   // inherit from 'parent' and accept property assignment (like
   // 'child.foo=4')
@@ -82,7 +83,8 @@ function beMutable(obj, prop, desc) { // todo: rename to doRepair
         // prevent 'parent.foo='
         throw new TypeError(`Cannot assign to read only property '${prop}' of object '${obj}'`);
       }
-      if (objectHasOwnProperty.call(this, prop)) { // todo: uncurry
+      if (objectHasOwnProperty.call(this, prop)) {
+        // todo: uncurry
         // we can only get here if someone extracts this setter and applies
         // it to an object which has already been assigned to (so normal
         // assignment would have changed the data property instead of using
@@ -93,7 +95,7 @@ function beMutable(obj, prop, desc) { // todo: rename to doRepair
           value: newValue,
           writable: true, // emulate creating a property by assignment
           enumerable: true,
-          configurable: true,
+          configurable: true
         });
       }
     }
@@ -107,7 +109,8 @@ function beMutable(obj, prop, desc) { // todo: rename to doRepair
   }
 }
 
-export function beMutableProperties(obj) { // repairObjectForFreeze
+export function beMutableProperties(obj) {
+  // repairObjectForFreeze
   if (!obj) {
     return;
   }
@@ -126,7 +129,8 @@ export function beMutableProperties(obj) { // repairObjectForFreeze
   //getOwnPropertySymbols(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
 }
 
-export function beMutableProperty(obj, prop) { // repairForFreeze
+export function beMutableProperty(obj, prop) {
+  // repairForFreeze
   const desc = getOwnPropertyDescriptor(obj, prop);
   beMutable(obj, prop, desc);
 }

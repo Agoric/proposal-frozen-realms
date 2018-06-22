@@ -5,11 +5,10 @@
 // Mitigate proxy-related security issues
 // https://github.com/tc39/ecma262/issues/272
 
-import { freeze, getOwnPropertyDescriptors, getPrototypeOf, ownKeys, objectHasOwnProperty, forEach } from './commons';
+import { freeze, getOwnPropertyDescriptors, getPrototypeOf, ownKeys } from './commons';
 
 // Objects that are deeply frozen.
 const frozenSet = new WeakSet();
-const weakSetAdd = WeakSet.prototype.add;
 
 /**
  * "deepFreeze()" acts like "Object.freeze()", except that:
@@ -34,7 +33,8 @@ export default function deepFreeze(node) {
       // future proof: break until someone figures out what it should do
       throw new TypeError(`Unexpected typeof: ${type}`);
     }
-    if (frozenSet.has(val) || freezingSet.has(val)) { // todo use uncurried form
+    if (frozenSet.has(val) || freezingSet.has(val)) {
+      // todo use uncurried form
       // Ignore if already frozen or freezing
       return;
     }
@@ -54,11 +54,12 @@ export default function deepFreeze(node) {
     // we rely upon certain commitments of Object.freeze and proxies here
 
     // get stable/immutable outbound links before a Proxy has a chance to do
-    // something sneaky. 
+    // something sneaky.
     const proto = getPrototypeOf(obj);
     const descs = getOwnPropertyDescriptors(obj);
     enqueue(proto);
-    forEach(ownKeys(descs), name => {
+    ownKeys(descs).forEach(name => {
+      // todo uncurried form
       // todo: getOwnPropertyDescriptors is guaranteed to return well-formed
       // descriptors, but they still inherit from Object.prototype. If
       // someone has poisoned Object.prototype to add 'value' or 'get'
@@ -67,7 +68,8 @@ export default function deepFreeze(node) {
       // whether 'value' is present or not, which tells us for sure that this
       // is a data property.
       const desc = descs[name];
-      if (objectHasOwnProperty(desc, 'value')) { // todo uncurried form
+      if ('value' in desc) {
+        // todo uncurried form
         enqueue(desc.value);
       } else {
         enqueue(desc.get);
@@ -78,7 +80,7 @@ export default function deepFreeze(node) {
 
   function dequeue() {
     // New values added before forEach() has finished will be visited.
-    forEach(freezingSet, doFreeze); // todo curried forEach
+    freezingSet.forEach(doFreeze); // todo curried forEach
   }
 
   function commit() {
@@ -86,7 +88,7 @@ export default function deepFreeze(node) {
     // we capture the real WeakSet.prototype.add above, in case someone
     // changes it. The two-argument form of forEach passes the second
     // argument as the 'this' binding, so we add to the correct set.
-    forEach(freezingSet, weakSetAdd, frozenSet);
+    freezingSet.forEach(frozenSet.add, frozenSet);
   }
 
   enqueue(node);
