@@ -11,7 +11,8 @@ export const {
   freeze,
   getOwnPropertyDescriptors,
   getOwnPropertyNames,
-  getOwnPropertySymbols
+  getOwnPropertySymbols,
+  hasOwnProperty
 } = Object;
 
 export const {
