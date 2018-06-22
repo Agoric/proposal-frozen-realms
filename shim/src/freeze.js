@@ -1,5 +1,5 @@
 import { repairDataProperties } from './mutable';
-import { deepFreeze } from './deep-freeze';
+import deepFreeze from './deep-freeze';
 import { assign, create } from './commons';
 
 // this file is only for testing. todo: rename, too much like Object.freeze

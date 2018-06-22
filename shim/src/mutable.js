@@ -7,8 +7,6 @@ import {
   defineProperty,
   getOwnPropertyDescriptor,
   getOwnPropertyDescriptors,
-  getOwnPropertyNames,
-  getOwnPropertySymbols,
   objectHasOwnProperty,
   ownKeys
 } from './commons';
@@ -122,11 +120,11 @@ export function beMutableProperties(obj) {
   // todo: for of can be corrupted by changing IteratorSymbol something
   // todo: uncurry forEach, use that
   // forEach(ownKeys(descs), prop => beMutable(obj, prop, descs[prop]))
-  for (let prop of ownKeys(descs)) {
+  for (const prop of ownKeys(descs)) {
     beMutable(obj, prop, descs[prop]);
   }
-  //getOwnPropertyNames(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
-  //getOwnPropertySymbols(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
+  // getOwnPropertyNames(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
+  // getOwnPropertySymbols(obj).forEach(prop => beMutable(obj, prop, descs[prop]));
 }
 
 export function beMutableProperty(obj, prop) {

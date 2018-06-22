@@ -86,7 +86,7 @@ test('deep-freeze', t => {
 test('scan', t => {
   const parent = Object.create(null);
   deepFreeze(parent);
-  //Object.freeze(parent);
+  // Object.freeze(parent);
   t.ok(Object.isFrozen(parent), 'the deepFrozen parent should be frozen');
 
   walkObjects(parent, (obj, pathForObject) => {

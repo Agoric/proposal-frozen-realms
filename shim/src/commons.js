@@ -29,5 +29,5 @@ export const objectHasOwnProperty = Object.prototype.hasOwnProperty;
 const bind = Function.prototype.bind;
 const uncurryThis = bind.bind(bind.call);
 
-//export const objectHasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
+// export const objectHasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
 export const forEach = uncurryThis(Array.prototype.forEach);
